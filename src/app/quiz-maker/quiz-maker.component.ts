@@ -1,27 +1,74 @@
-import {Component} from '@angular/core';
-import {Category, Difficulty, Question} from '../data.models';
-import {Observable} from 'rxjs';
-import {QuizService} from '../quiz.service';
-import {FormsModule} from '@angular/forms';
-import {QuizComponent} from '../quiz/quiz.component';
-import {AsyncPipe} from '@angular/common';
+import { AsyncPipe, KeyValuePipe } from '@angular/common';
+import { Component, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { Observable, of, Subject, switchMap } from 'rxjs';
+import {
+  Category,
+  Difficulty,
+  GroupedCategory,
+  Question,
+} from '../data.models';
+import { QuizService } from '../quiz.service';
+import { QuizComponent } from '../quiz/quiz.component';
 
 @Component({
   selector: 'app-quiz-maker',
-  imports: [FormsModule, QuizComponent, AsyncPipe],
+  imports: [FormsModule, QuizComponent, AsyncPipe, KeyValuePipe],
   templateUrl: './quiz-maker.component.html',
-  styleUrls: ['./quiz-maker.component.css']
+  styleUrls: ['./quiz-maker.component.css'],
 })
 export class QuizMakerComponent {
+  categories$: Observable<GroupedCategory>;
+  private createQuizTrigger$ = new Subject<{
+    categoryId: string;
+    difficulty: Difficulty;
+  } | null>();
+  questions$: Observable<Question[] | null> = this.createQuizTrigger$.pipe(
+    switchMap((params) => {
+      if (!params) return of(null);
+      return this.quizService.createQuiz(params.categoryId, params.difficulty);
+    }),
+  );
 
-  categories$: Observable<Category[]>;
-  questions$!: Observable<Question[]>;
+  selectedMainKey = signal<string>('');
+  selectedSubId = signal<string>('');
+  selectedDifficulty = signal<Difficulty>('');
 
-  constructor(protected quizService: QuizService) {
-    this.categories$ = quizService.getAllCategories()
+  resetQuiz() {
+    this.createQuizTrigger$.next(null);
   }
 
-  createQuiz(cat: string, difficulty: string): void {
-    this.questions$ = this.quizService.createQuiz(cat, difficulty as Difficulty);
+  onMainCategoryChange() {
+    this.selectedSubId.set('');
+    this.resetQuiz();
+  }
+
+  constructor(protected quizService: QuizService) {
+    this.categories$ = quizService.getAllCategories();
+  }
+
+  createQuiz(categories: GroupedCategory): void {
+    const mainKey = this.selectedMainKey();
+    const subId = this.selectedSubId();
+    const difficulty = this.selectedDifficulty();
+
+    if (!mainKey || !difficulty) {
+      console.error('카테고리와 난이도를 모두 선택해야 합니다.');
+      return;
+    }
+
+    const finalCategoryId = subId
+      ? subId
+      : categories[mainKey][0].id.toString();
+
+    this.createQuizTrigger$.next({ categoryId: finalCategoryId, difficulty });
+  }
+
+  hasSubCategories(subCategories: Category[], mainKey: string) {
+    if (!subCategories) return false;
+    if (subCategories.length === 1 && subCategories[0].name === mainKey) {
+      return false;
+    }
+    return true;
   }
 }

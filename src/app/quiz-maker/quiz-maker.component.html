@@ -1,23 +1,33 @@
+@if(categories$ | async; as categories) {
 <div class="row">
   <div class="col-sm-11">
-    <select #category id="categorySelect">
-      <option>Select category</option>
-      @for (category of categories$ | async; track category) {
-        <option [value]="category.id">
-          {{category.name}}
-        </option>
+    <select id="categorySelect" [(ngModel)]="selectedMainKey" (change)="onMainCategoryChange()">
+      <option value="">Select category</option>
+      @for (group of categories | keyvalue ; track group.key) {
+      <option [value]="group.key">{{ group.key }}</option>
       }
     </select>
-    <select #difficulty id="difficultySelect">
-      <option>Select difficulty</option>
-      <option>Easy</option>
-      <option>Medium</option>
-      <option>Hard</option>
+
+    @if(selectedMainKey() && hasSubCategories(categories[selectedMainKey()], selectedMainKey())) {
+    <select [(ngModel)]="selectedSubId">
+      <option value="">Select Subcategory</option>
+      @for(sub of categories[selectedMainKey()]; track sub.id){
+      <option [value]="sub.id">{{ sub.name }}</option>
+      }
     </select>
-    <button class="primary" id="createBtn" (click)="createQuiz(category.value, difficulty.value)">Create</button>
+    }
+    <select [(ngModel)]="selectedDifficulty" id="difficultySelect">
+      <option value="">Select difficulty</option>
+      <option value="Easy">Easy</option>
+      <option value="Medium">Medium</option>
+      <option value="Hard">Hard</option>
+    </select>
+    <button class="primary" id="createBtn" (click)="createQuiz(categories)">Create</button>
   </div>
 
 </div>
+}
+
 <div class="row">
-  <app-quiz [questions]="(questions$ | async) ?? []" ></app-quiz>
+  <app-quiz [questions]="(questions$ | async) ?? []"></app-quiz>
 </div>

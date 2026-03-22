@@ -3,6 +3,8 @@ export interface Category {
   name: string;
 }
 
+export type GroupedCategory = Record<string, Category[]>;
+
 export interface ApiQuestion {
   category: string;
   type: string;
@@ -25,5 +27,4 @@ export interface Results {
   score: number;
 }
 
-
-export type Difficulty = "Easy" | "Medium" | "Hard";
+export type Difficulty = '' | 'Easy' | 'Medium' | 'Hard';
