@@ -1,12 +1,22 @@
 @for (q of questions(); track q; let i = $index) {
-  <app-question [question]="q"
-    (change)="userAnswers[i] = $event">
-  </app-question>
+<app-question [question]="q" (change)="userAnswers[i] = $event">
+</app-question>
 }
 <div>
   @if (allAnswered()) {
-    <button class="inverse large" (click)="submit()">
-      Submit
-    </button>
+  <button class="inverse large" (click)="confirmDialog.open()">
+    Submit
+  </button>
   }
 </div>
+
+<app-dialog #confirmDialog title="Are you sure?">
+  <ng-container body>
+    Please confirm you want to submit your quiz
+  </ng-container>
+
+  <ng-container footer>
+    <button class="tertiary" (click)="onConfirm()">OK</button>
+    <button class="secondary" (click)="confirmDialog.close()">Not yet</button>
+  </ng-container>
+</app-dialog>
