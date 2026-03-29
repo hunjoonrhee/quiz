@@ -1,13 +1,7 @@
 import { AsyncPipe, KeyValuePipe } from '@angular/common';
-import { Component, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Observable, of, Subject, switchMap } from 'rxjs';
-import {
-  Category,
-  Difficulty,
-  GroupedCategory,
-  Question,
-} from '../data.models';
+import { Category, Difficulty, GroupedCategory } from '../data.models';
 import { QuizService } from '../quiz.service';
 import { QuizComponent } from '../quiz/quiz.component';
 
@@ -17,34 +11,21 @@ import { QuizComponent } from '../quiz/quiz.component';
   templateUrl: './quiz-maker.component.html',
   styleUrls: ['./quiz-maker.component.css'],
 })
-export class QuizMakerComponent {
-  categories$: Observable<GroupedCategory>;
-  private createQuizTrigger$ = new Subject<{
-    categoryId: string;
-    difficulty: Difficulty;
-  } | null>();
-  questions$: Observable<Question[] | null> = this.createQuizTrigger$.pipe(
-    switchMap((params) => {
-      if (!params) return of(null);
-      return this.quizService.createQuiz(params.categoryId, params.difficulty);
-    }),
-  );
+export class QuizMakerComponent implements OnInit {
+  readonly quizService = inject(QuizService);
 
   selectedMainKey = signal<string>('');
   selectedSubId = signal<string>('');
   selectedDifficulty = signal<Difficulty>('');
 
-  resetQuiz() {
-    this.createQuizTrigger$.next(null);
+  ngOnInit(): void {
+    this.quizService.getCategories();
+    this.quizService.currentQuestions.set([]);
   }
 
   onMainCategoryChange() {
     this.selectedSubId.set('');
-    this.resetQuiz();
-  }
-
-  constructor(protected quizService: QuizService) {
-    this.categories$ = quizService.getAllCategories();
+    this.quizService.currentQuestions.set([]);
   }
 
   createQuiz(categories: GroupedCategory): void {
@@ -61,7 +42,7 @@ export class QuizMakerComponent {
       ? subId
       : categories[mainKey][0].id.toString();
 
-    this.createQuizTrigger$.next({ categoryId: finalCategoryId, difficulty });
+    this.quizService.createQuiz(finalCategoryId, difficulty);
   }
 
   hasSubCategories(subCategories: Category[], mainKey: string) {

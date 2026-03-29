@@ -1,4 +1,7 @@
-@if(categories$ | async; as categories) {
+@let categories = quizService.groupedCategory();
+@let questions = quizService.currentQuestions();
+
+@if(quizService.groupedCategory()) {
 <div class="row">
   <div class="col-sm-11">
     <select id="categorySelect" [(ngModel)]="selectedMainKey" (change)="onMainCategoryChange()">
@@ -29,5 +32,5 @@
 }
 
 <div class="row">
-  <app-quiz [questions]="(questions$ | async) ?? []"></app-quiz>
+  <app-quiz [questions]="questions ?? []"></app-quiz>
 </div>

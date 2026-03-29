@@ -1,4 +1,4 @@
-import { Component, inject, input, ViewChild } from '@angular/core';
+import { Component, inject, input, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Question } from '../data.models';
 import { QuizService } from '../quiz.service';
@@ -9,7 +9,7 @@ import { QuestionComponent } from '../question/question.component';
 @Component({
   selector: 'app-quiz',
   templateUrl: './quiz.component.html',
-  styleUrls: ['./quiz.component.css'],
+  styleUrls: ['./quiz.component.scss'],
   imports: [QuestionComponent, DialogComponent],
 })
 export class QuizComponent {
@@ -26,5 +26,9 @@ export class QuizComponent {
 
   allAnswered(): boolean {
     return this.userAnswers.every((ans) => ans != '');
+  }
+
+  onSwapClick(question: Question) {
+    this.quizService.switchQuestion(question);
   }
 }
